@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="element-plus-index.css" />
+    <script src="vue.js"></script>
+    <script src="element-index-full.js"></script>
+    <script src="icons-vue.js"></script>
+    <title>发表</title>
+    <style>
+        #app {
+            width: 80%;
+
+            margin: auto;
+            box-shadow: var(--el-box-shadow-dark);
+            text-align: center;
+            vertical-align: middle;
+            padding: 30px;
+            margin-top: 40px;
+        }
+
+        ;
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <h1>新建文章</h1>
+        <el-form class="el-form el-form--default el-form--label-top">
+            <el-form-item label="标题">
+                <el-input v-model="title" placeholder="请输入标题" clearable/>
+            </el-form-item>
+            <br>
+            <el-form-item label="内容">
+                <el-input v-model="content" type="textarea" placeholder="请输入内容" autosize/>
+            </el-form-item>
+        </el-form>
+            <br>
+<!-- <el-upload ref="file"><el-button type="primary">Click to upload</el-button></el-upload> -->
+                <input type="file" ref="file" />
+                <br>
+            <el-button type="submit" @click="sendData">提交</el-button> 
+            <p>{{ msg }}</p>
+        </el-form>
+    </div>
+
+
+    <script>
+        const { createApp } = Vue
+
+        const app = createApp({
+            data() {
+                return {
+                    title: '',
+                    content: '',
+                    msg: ''
+                }
+            },
+            methods: {
+                async sendData() {
+                    if (this.title === '' || this.content === '') {
+                        this.msg = '存在未填写项，请检查';
+                        return;
+                    }
+                    const title = this.title;
+                    const content = this.content;
+                    const file = this.$refs.file.files[0];
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('title', title);
+                    formData.append('content', content);
+                    const response = await fetch('api/addArticle.php', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    console.log(response);
+                    const data = await response.json();
+                    console.log(data);
+
+                    if (data.code == "200") {
+                        // this.$router.push('index.html');
+                        this.msg = '提交成功'
+                        window.location.href = "index.html";
+                    } else {
+                        // 否则，提示错误信息
+                        this.msg = data.msg;
+                    }
+                }
+            }
+        })
+        app.use(ElementPlus);
+        app.mount("#app");
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="element-plus-index.css" />
+    <script src="vue.js"></script>
+    <script src="element-index-full.js"></script>
+    <script src="icons-vue.js"></script>
+
+    <title>首页</title>
+    <style>
+        .article {
+            margin: auto;
+            margin-bottom: 30px;
+            width: 80%;
+        }
+
+        .showimage {
+            height: 300px;
+            width: 80%;
+            margin: auto;
+            text-align: center;
+        }
+
+
+        .title {
+            padding: 30px;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .create_time {
+            padding: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app">
+        <el-container>
+            <el-header>
+
+                <button class="el-button is-link" aria-disabled="false" @click="jumptopublish"
+                    v-if="isLogin == 1">新建</button>
+                <button class="el-button is-link" aria-disabled="false" @click="jumptologin" v-else>登录</button>
+                <el-input v-model="keyword" class="w-50 m-2" style="width: 400px;float: right;" placeholder="搜索"
+                    :suffix-icon="Search" @input="search" />
+            </el-header>
+            <el-main>
+
+                <template>
+                    <el-backtop :right="100" :bottom="100" />
+                </template>
+                <el-card shadow="hover" class="article" v-for="article in articles" :key="article.id">
+                    <div class="showimage" v-if="article.image">
+                        <el-image v-if="article.image" :src="'src/'+article.image" style="height:300px;"
+                            :fit="contain" />
+                    </div>
+
+                    <div class="title">
+                        <h1>{{ article.title }}</h1>
+                    </div>
+                    <div class="content">
+                        <p>{{ article.content }}</p>
+                    </div>
+                    <div class="create_time">
+                        <p>{{ article.author_name }} 创建于 ： {{ article.create_time }}
+                            <button class="el-button is-link" aria-disabled="false" @click="editArticle(article.id)"
+                                v-if="isLogin == 1">编辑</button>
+                            <button class="el-button is-link" aria-disabled="false" @click="delArticle(article.id)"
+                                v-if="isLogin == 1">删除</button>
+                        </p>
+                    </div>
+                </el-card>
+            </el-main>
+            <el-footer></el-footer>
+        </el-container>
+
+
+
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        const app = createApp({
+            data() {
+                return {
+                    articles: [],
+                    isLogin: null,
+                    keyword: "",
+                }
+            },
+            mounted() {
+                this.getArticles(1);
+            },
+            methods: {
+                async getArticles(page) {
+                    const articles = this.articles;
+                    const response = await fetch('./api/getArticle.php?page=' + page, {
+                        method: 'GET',
+                    });
+                    console.log(response);
+                    const data = await response.json();
+                    console.log(data);
+                    if (data.code == "201") {
+                        this.isLogin = 1;
+                    }
+                    if (data.code == "201" || data.code == "200" || data.code == "302") {
+                        for (var item of data.data) {
+                            articles.push(item);
+                            console.log(item);
+                        }
+                        this.msg = data.msg;
+                    } else {
+                        // 否则，提示错误信息
+                        this.msg = data.msg;
+                    }
+                },
+                async search() {
+                    const response = await fetch('./api/search.php', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            keyword: this.keyword
+                        }),
+                    });
+                    console.log(response);
+                    const data = await response.json();
+                    console.log(data);
+
+                    if (data.code == "200") {
+                        // this.$router.push('index.html');
+                        this.articles = [];
+                        for (var item of data.data) {
+                            this.articles.push(item);
+                            console.log(item);
+                        }
+                    } else {
+                        // 否则，提示错误信息
+                        this.msg = data.msg;
+                    }
+                },
+
+                jumptologin() {
+                    window.location.href = "login.html";
+                },
+                jumptopublish() {
+                    window.location.href = "publish.html";
+                },
+                editArticle(id) {
+                    window.location.href = "editArticle.html?id=" + id;
+                },
+                async delArticle(id) {
+                    var result = window.confirm('是否确定删除？');
+                    if (result == 1) {
+                        const response = await fetch('api/delArticle.php?id=' + id, {
+                            method: 'GET',
+                        });
+                        const data = await response.json();
+                        console.log(data);
+                        if (data.code == "200") {
+                            alert("删除成功");
+                            const articles = this.articles;
+                            const index = articles.findIndex(item => {
+                                if (item.id == id) {
+                                    return true
+                                }
+                            })
+                            articles.splice(index, 1);
+                            // articles.value = articles.value.filter((t) => t !== id);
+                        } else {
+                            alert("删除失败");
+                        }
+
+                    }
+                }
+            }
+        })
+        app.use(ElementPlus);
+        app.mount("#app"); 
+    </script>
+</body>
+
+</html>

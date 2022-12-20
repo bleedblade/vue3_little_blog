@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="element-plus-index.css" />
+    <script src="vue.js"></script>
+    <script src="element-index-full.js"></script>
+    <title>登录</title>
+    <style>
+
+        #app{
+            width:300px;
+            height:300px;
+            margin: auto;
+            box-shadow: var(--el-box-shadow-dark);
+            text-align: center;
+            vertical-align:middle;
+            padding: 30px;
+            margin-top: 40px;
+        };
+    </style>
+</head>
+<body>
+    <div id="app">
+        <h1>登录账号</h1>
+        <el-form class="el-form el-form--default el-form--label-top is-error is-required" >
+            <el-form-item label="用户名">
+              <el-input v-model="username" placeholder="请输入用户名" required="required" clearable/>
+            </el-form-item>
+            <div class="el-form-item__error">Please input Activity name</div>
+
+            <el-form-item label="密码">
+                <el-input v-model="password" placeholder="请输入密码" required="required" clearable show-password/>
+            </el-form-item>
+            <div class="el-form-item__error">Please input Activity name</div>
+        </el-form>
+
+        <br>
+        <el-button @click="sendData">{{ loginbtn }}</el-button>
+        <el-button @click="jumptoregister" link>{{ toregister }}</el-button>
+        <p style="color: red;">{{ msg }}</p>
+    </div>
+
+    <script>
+        const { createApp } = Vue
+        const app = createApp({
+            data() {
+                return {
+                    loginbtn:"登录",
+                    toregister:"没有账号？去注册",
+                    username: '',
+                    password: '',
+                    msg:''
+                }
+            },
+            methods: {
+                async sendData() {
+                    if (this.username === '' || this.password === '') {
+                        this.msg = '存在未填写项，请检查';
+                        return;
+                    }
+                    const response = await fetch('./api/login.php', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            username: this.username,
+                            password: this.password
+                        }),
+                    });
+                    console.log(response);
+                    const data = await response.json();
+                    console.log(data);
+                    
+                    if (data.code == "200" || data.code == "302") {
+                        // this.$router.push('index.html');
+                        window.location.href = 'index.html';
+                    } else {
+                        // 否则，提示错误信息
+                        this.msg = data.msg;
+                    }
+                },
+                jumptoregister(){
+                    window.location.href="register.html";
+                }
+                
+            }
+        })
+        app.use(ElementPlus);
+        
+        app.mount("#app");
+
+    </script>
+</body>
+</html>
